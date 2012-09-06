@@ -8,12 +8,6 @@
   (:require-macros [enfocus.macros :as em])
   )
 
-(defn setup [canvas-id]
-  (start-map-view canvas-id)
-  (start-buttons)
-  (map/locate)
-  )
-
 (defn- load-internal [active-page]
   (view/load-navigation active-page)
   (view/load-content active-page)
@@ -29,9 +23,7 @@
         :error))))
 
 (defn ^:extern load-page
-  ([] (load-page (let [page (get-current-page js/window.location.hash)]
-                   (util/log "page" page)
-                   page)))
+  ([] (load-page (get-current-page js/window.location.hash)))
   ([active-page]
      (let [active-page (if active-page (keyword active-page) :map)]
        (em/wait-for-load (load-internal active-page)))))
