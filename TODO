@@ -1,0 +1,85 @@
+= Functionality
+
+== Constantly show where client is located
+- Show marker on the map.
+- Clicking marker shows coordinates?
+
+- geoLocation API, watchLocation
+- long cache, low accuracy
+
+== Center on current location
+- Centers map to client current location.
+- If location ability is not available, ability is hidden.
+
+- geoLocation API, getLocation
+- disable cache, high accuracy
+
+== View tracker list
+- Shows a list of trackers
+
+== Select tracker(s) to follow
+- Select trackers trackers that are shown in the list
+- Map shows paths for selected trackers.
+- Map shows marker at latest known position.
+- Selected trackers are stored to local storage
+-- ruuvitracker.ui.selected-trackers = [1,2,99] // tracker ids
+
+== Deselect tracker(s)
+- Removes tracker from list of followed trackers
+- Removes paths and markers from map
+
+== Clicking a marker centers map
+
+-------------------
+
+= Nice to have features
+
+== Annotate event
+- Click tracker path  and select closest event or click a marker.
+- Write text that will be stored to event.
+
+---------------
+
+= Templates
+
+- basic page structure
+- navigation
+-- active navi item as parameter
+- map
+
+
+--------------
+
+= Map implementation
+
+State:
+- Current location for device (+ marker)
+-- atom self-location = {:location <LatLng-object> :marker <marker-object>}
+- Selected trackers
+-- list of events related to each trackers
+-- atom selected-trackers {tracker-id1 {:tracker <tracker-object> 
+                                       :events [event1 event2 ...]
+                                       :marker <marker-object>
+                                       :path <path-object>}}
+Functions
+- update-self-location [LatLng]
+- center-map [LatLng & zoom]
+- add-tracker [tracker]
+- remove-tracker [tracker]
+- add-events-to-tracker [tracker events]
+-- handle duplicates
+-- order by event time
+-- update marker location
+- get-tracker [tracker-id]
+
+Background processes
+- watch self location and update marker
+-- geoLocation.watchPosition -> update-self-location
+- poll new data for trackers
+-- get list of tracker id's, make ajax request for each.
+
+---------------------
+
+Page structure
+- onload reads url and loads corresponding template
+- after loading the elements are bound to actions
