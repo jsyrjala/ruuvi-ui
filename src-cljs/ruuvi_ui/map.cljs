@@ -5,12 +5,13 @@
 
 (def map-view (atom nil))
 ;; {tracker-id1 {:tracker <tracker-object>
+;;               :latest-event-time
+;;               :latest-store-time
 ;;               :events [event1 event2]
 ;;               :marker <marker-object>
 ;;               :path <path-object>}}
 (def self-location (atom {}))
 
-;;
 (def trackers-store (atom {}))
   
 (defn create-osm-tiles []
@@ -46,7 +47,6 @@
                                         (let [location (.-latlng e)]
                                           (set-map-location! location 18)
                                           (update-self-location location)
-
                                           )))
     (.on new-map-view "locationerror" (fn [e] (js/console.log "Location error" e)))
     (reset! map-view new-map-view)
@@ -74,7 +74,7 @@
   )
 
 (defn- sort-events [events]
-  (sort-by #(get % "event_time")))
+  (sort-by #(get % "event_time") events))
   
 (defn- merge-events [old-events new-events]
   (let [events (concat old-events new-events)
@@ -86,9 +86,10 @@
 
 (defn- add-tracker-event-data [tracker-id new-events]
   ;; merge new-events with old events and remove dupes
-  (swap! tracker-store
+  (swap! trackers-store
          (fn [trackers] (update-in trackers [tracker-id :events]
-                                   #(sort-events (merge-events % new-events))))))
+                                   #(sort-events (merge-events % new-events)))))
+  )
 
 (defn add-event-data [events-data]
   ;; group events by tracker_id

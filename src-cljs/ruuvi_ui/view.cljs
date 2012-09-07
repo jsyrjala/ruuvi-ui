@@ -39,9 +39,10 @@
   (util/log "show-events" data)
   )
 
-(defn f []
+(defn- f []
   ;;  (api/get-events 4 nil (fn [data] (show-events (js->clj data))) util/log)
-  (api/get-trackers map/add-tracker-data util/log)
+  ;; (api/get-trackers map/add-tracker-data util/log)
+  (api/get-events 4 nil map/add-event-data util/log)
   )
 
 (em/defaction start-buttons []
