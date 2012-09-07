@@ -1,7 +1,7 @@
 (defproject ruuvi-ui "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
-  :plugins [[lein-cljsbuild "0.2.6"]
+  :plugins [[lein-cljsbuild "0.2.7"]
             [lein-midje "2.0.0-SNAPSHOT"]
             ]
   :dependencies [[org.clojure/clojure "1.4.0"]
@@ -9,7 +9,7 @@
                  [enfocus "1.0.0-alpha2"]
 
                  ;; JavaScript
-                 [jayq "0.1.0-alpha2"]
+                 [jayq "0.1.0-alpha3"]
 
                  ;; web server
                  [compojure "1.1.1"]
@@ -31,20 +31,28 @@
                  ]
   :main ruuvi-ui-server.server
   :cljsbuild {
-    ;;:crossovers [depr.crossovers]
-    ;;:crossover-jar false
-    :builds {
-      :dev
-      {:source-path "src-cljs"
-       :jar true
-       :compiler {:output-to "resources/public/js/ruuvi-tracker-ui-debug.js"
-                  :optimizations :whitespace
-                  :pretty-print true}}
-      :prod
-      {:source-path "src-cljs"
-       :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
-                  :optimizations :advanced
-                  :pretty-print false
-                  :sourcemap true}}}}
+              ;;:crossovers [depr.crossovers]
+              ;;:crossover-jar false
+              :builds {
+                       
+                       :dev
+                       {:source-path "src-cljs"
+                        :jar true
+                        :compiler {:output-to "resources/public/js/ruuvi-tracker-ui-debug.js"
+                                   :optimizations :whitespace
+                                   :pretty-print true
+                                   }}
+                       :prod
+                       {:source-path "src-cljs"
+                        :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
+                                   ;; TODO :advanced doesn't work with
+                                   ;; leaflet. Using it: 750k -> 197k
+                                   ;; :optimizations :advanced
+                                   :optimizations :simple
+                                   :pretty-print true
+                                   ;; TODO is needed?
+                                   :externs ["externs/jquery.js"]
+                                   :sourcemap true
+                                   }}}}
 
   )

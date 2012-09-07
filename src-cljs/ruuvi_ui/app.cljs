@@ -22,8 +22,9 @@
         (last (first parts))
         :error))))
 
-(defn ^:extern load-page
-  ([] (load-page (get-current-page js/window.location.hash)))
+(defn ^:export load-app
+  ([] (load-app (get-current-page js/window.location.hash)))
   ([active-page]
+     (util/log "Starting app")
      (let [active-page (if active-page (keyword active-page) :map)]
        (em/wait-for-load (load-internal active-page)))))

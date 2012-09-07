@@ -6,15 +6,19 @@
 
 (def self-marker (atom (new js/L.Marker (new js/L.LatLng 0.0 0.0))))
 
-(defn ^:extern create-osm-tiles []
+(defn create-osm-tiles []
   (let [tile-url "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         tile-opts (js-obj "attribution" "Map data &copy; <a href='http://openstreetmap.org'>OpenStreetMap</a> contributors, <a href='http://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>"
                    "maxZoom" 18)
         tiles (new js/L.TileLayer tile-url tile-opts)]
     tiles))
 
-(defn set-map-location! [location & [zoom marker]]
+(defn center-map [location & [zoom]]
   (.setView @map-view location (or zoom 13))
+  )
+
+(defn set-map-location! [location & [zoom marker]]
+  (center-map location zoom)
   (when marker
     (.setOpacity marker 1)
     (.setLatLng marker location)
@@ -35,7 +39,7 @@
     (.addTo @self-marker new-map-view)
     new-map-view))
 
-(defn ^:extern locate []
+(defn locate []
   (let [options (js-obj "timeout" 2000
                         "maximumAge" 10000
                         "enableHighAccuracy" true)]

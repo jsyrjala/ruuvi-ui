@@ -2,3 +2,7 @@
     width: 100%; 
     height: 500px;
 }
+
+.search-form {
+    display: inline;
+}
