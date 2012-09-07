@@ -1,3 +1,10 @@
+= Notes
+
+== Leaflet
+
+When adding new leaflet related functionality, check that all used leaflet methods and 
+properties are present in `closure-js/externs/leaflet-externs.js`.
+
 = Functionality
 
 == Constantly show where client is located

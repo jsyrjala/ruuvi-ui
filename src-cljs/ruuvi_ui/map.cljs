@@ -32,7 +32,7 @@
     (.on new-map-view "locationfound" (fn [e]
                                         (set-map-location! (.-latlng e) 18 @self-marker)
                                         ))
-    (.on new-map-view "locationerror" (fn [e] (js/console "Location error" e)))
+    (.on new-map-view "locationerror" (fn [e] (js/console.log "Location error" e)))
     (reset! map-view new-map-view)
     (set-map-location! start-location)
     (.setOpacity @self-marker 0)
