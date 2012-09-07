@@ -53,6 +53,8 @@
 
 (defn search-location
   [address success-fn & [error-fn]]
-  (let [url "http://nominatim.openstreetmap.org/search"]
-    (ajax-param-request url {:q address :format :json} (parse-search-location-response success-fn) error-fn)))
+  (when (and address (not (empty? address)))
+    (util/log "Locating address:" address)
+    (let [url "http://nominatim.openstreetmap.org/search"]
+      (ajax-param-request url {:q address :format :json} (parse-search-location-response success-fn) error-fn))))
     
