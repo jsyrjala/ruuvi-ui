@@ -4,14 +4,15 @@
   )
 
 (def map-view (atom nil))
+
+(def self-location (atom {}))
+
 ;; {tracker-id1 {:tracker <tracker-object>
 ;;               :latest-event-time
 ;;               :latest-store-time
 ;;               :events [event1 event2]
 ;;               :marker <marker-object>
 ;;               :path <path-object>}}
-(def self-location (atom {}))
-
 (def trackers-store (atom {}))
   
 (defn create-osm-tiles []
@@ -80,15 +81,25 @@
   (let [events (concat old-events new-events)
         sorted-events (sort-by #(get % "id") events)
         grouped-events (partition-by #(get % "id") sorted-events)
-        deduped-events (map first grouped-events)
-        ]
+        deduped-events (map first grouped-events)]
     deduped-events))
 
 (defn- add-tracker-event-data [tracker-id new-events]
   ;; merge new-events with old events and remove dupes
   (swap! trackers-store
-         (fn [trackers] (update-in trackers [tracker-id :events]
-                                   #(sort-events (merge-events % new-events)))))
+         (fn [trackers]
+           (let [trackers (update-in trackers [tracker-id :events]
+                                     #(sort-events (merge-events % new-events)))             
+                 trackers (update-in trackers [tracker-id :latest-event-time]
+                                     (fn [time]
+                                       (apply max (conj (map #(get % "event_time") new-events) time))) )
+                 trackers (update-in trackers [tracker-id :latest-store-time]
+                                     (fn [time]
+                                       (apply max (conj (map #(get % "store_time") new-events) time))) )
+                 ]
+             trackers
+             ))
+         )
   )
 
 (defn add-event-data [events-data]
