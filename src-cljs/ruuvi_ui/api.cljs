@@ -8,6 +8,10 @@
 (defn- log-request-error [e]
   (util/log (str "AJAX request failed" e)))
 
+;; TODO handles only the first level
+(defn- keyword-keys [m]
+  (into {} (map (fn [[k v]] {(keyword k) v}) m)))
+
 (defn- wrap-success-fn
   "Convert incoming JSON data to Clojure data structure."
   [func]
@@ -33,9 +37,6 @@
   (let [results-since (if since-timestamp (str "storeTimeStart=" since-timestamp) "")]
     (ajax-url-request (str base-url "trackers/" tracker-id "/events?" results-since)
               success-fn error-fn)))
-
-(defn- keyword-keys [m]
-  (into {} (map (fn [[k v]] {(keyword k) v}) m)))
 
 (defn- parse-search-location-response [func]
   (fn [data text-status jqxhr]

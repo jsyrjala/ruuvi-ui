@@ -1,13 +1,17 @@
 (ns ruuvi-ui.map
-  (:require [jayq.core :as jquery])
+  (:require [ruuvi-ui.util :as util]
+            [jayq.core :as jquery])
   )
 
 (def map-view (atom nil))
-
+;; {tracker-id1 {:tracker <tracker-object>
+;;               :events [event1 event2]
+;;               :marker <marker-object>
+;;               :path <path-object>}}
 (def self-location (atom {}))
 
 ;;
-(def trackers (atom {}))
+(def trackers-store (atom {}))
   
 (defn create-osm-tiles []
   (let [tile-url "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -55,3 +59,41 @@
                         "enableHighAccuracy" true)]
     (.locate @map-view options)
     ))
+
+(defn add-tracker-data [trackers-data]
+  ;; Update tracker data to trackers-store. Overwrite existing
+  ;; trackers.
+  (let [trackers (get trackers-data "trackers")]
+    (swap! trackers-store
+           (fn [old-list]
+             (reduce (fn [sum tracker]
+                       (update-in sum [("id" tracker) :tracker]
+                                  (fn [_] tracker)))
+                     old-list
+                     trackers))))
+  )
+
+(defn- sort-events [events]
+  (sort-by #(get % "event_time")))
+  
+(defn- merge-events [old-events new-events]
+  (let [events (concat old-events new-events)
+        sorted-events (sort-by #(get % "id") events)
+        grouped-events (partition-by #(get % "id") sorted-events)
+        deduped-events (map first grouped-events)
+        ]
+    deduped-events))
+
+(defn- add-tracker-event-data [tracker-id new-events]
+  ;; merge new-events with old events and remove dupes
+  (swap! tracker-store
+         (fn [trackers] (update-in trackers [tracker-id :events]
+                                   #(sort-events (merge-events % new-events))))))
+
+(defn add-event-data [events-data]
+  ;; group events by tracker_id
+  (let [events (get events-data "events")
+        grouped (group-by #(get % "tracker_id") events)]
+    (doall
+     (map #(add-tracker-event-data (key %) (val %)) grouped))
+  ))
