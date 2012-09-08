@@ -1,9 +1,11 @@
 (ns ruuvi-ui.map
-  (:require [ruuvi-ui.util :as util]
-            [jayq.core :as jquery])
-  )
+  (:require [ruuvi-ui.util :as util])
+  (:use [jayq.core :only [$ replaceWith]]
+  ))
 
-;; TODO support several map
+(declare locate)
+
+;; TODO support several maps?
 (def map-view (atom nil))
 
 (def self-location (atom {}))
@@ -24,38 +26,67 @@
     tiles))
 
 (defn center-map [location & [zoom]]
-  (.setView @map-view location (or zoom 13))
-  )
+  (let [zoom (or zoom 13)]
+    (util/log (str "Centering map on " (.-lat location) " " (.-lng location) " with zoom " zoom))
+    (.setView @map-view location zoom)
+  ))
 
-(defn- update-self-location [new-location]
+(defn- update-self-location
+  "Updates location of self marker."
+  [new-location]
   (swap! self-location (fn [{:keys [old-location marker] :as old-value}]
                          (let [marker (or marker (let [m (new js/L.Marker new-location)]
-                                                   m))]
-                           (.addTo marker @map-view)
+                                                   (.addTo m @map-view)
+                                                   m))]                     
                            (.setLatLng marker new-location)
                            (.update marker)
                            (merge old-value {:location new-location :marker marker}))
-                         ))
-  )
+                         )))
 
-(defn set-map-location! [location & [zoom]]
-  (center-map location zoom))
-
-(defn create-map [canvasId tiles start-location]
-  (let [new-map-view (new js/L.Map canvasId)
-        ]
+(defn- create-map [canvas-id start-location]
+  (util/log "Create new map. Start location:" (.-lat start-location) (.-lng start-location) )
+  (let [tiles (create-osm-tiles)
+        new-map-view (new js/L.Map canvas-id)]
     (.addLayer new-map-view tiles)
     (.on new-map-view "locationfound" (fn [e]
                                         (let [location (.-latlng e)]
-                                          (set-map-location! location 18)
+                                          (center-map location 18)
                                           (update-self-location location)
                                           )))
     (.on new-map-view "locationerror" (fn [e] (js/console.log "Location error" e)))
     (reset! map-view new-map-view)
-    (set-map-location! start-location)
+    (center-map start-location)
+    (locate)
     new-map-view))
 
+(defn- reattach-controls
+  "Remove and add controls back to map. Some controls break when redisplaying map."
+  [map-view]
+  (let [old-control (.-zoomControl map-view)]
+    (.removeFrom old-control map-view)
+    (.addTo old-control map-view)))
+
+(defn- redisplay-map
+  "Displays existing map in given location in DOM."
+  [canvas-id map-view]
+  (util/log "Redisplay existing map.")
+  (let [map-container (.getContainer map-view)
+        placeholder ($ (str "#" canvas-id))]
+    (.replaceWith placeholder map-container)
+    (reattach-controls map-view)
+  ))
+
+(defn open-map
+  "Opens map at given canvas-id. If map doesn't exist it is created and centered on users current location or given start-location. If map already exists, its center point is not changed."
+  [& [canvas-id start-location]]
+  (let [existing-map-view @map-view]
+    (if existing-map-view
+      (redisplay-map canvas-id existing-map-view)
+      (create-map canvas-id start-location)
+  )))
+
 (defn locate []
+  (util/log "Locating self")
   (let [options (js-obj "timeout" 2000
                         "maximumAge" 10000
                         "enableHighAccuracy" true)]

@@ -42,8 +42,8 @@
     (let [parsed-data (into [] 
                             (map (fn [item]
                                    (let [value (select-keys item ["icon" "display_name"])
-                                         lat (item "lat")
-                                         lon (item "lon")
+                                         lat (:lat item)
+                                         lon (:lon item)
                                          value (merge value
                                                       {:location (new js/L.LatLng lat lon)})]
                                     value

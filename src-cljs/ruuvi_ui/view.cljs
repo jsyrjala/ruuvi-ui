@@ -30,9 +30,8 @@
 ;;;;;;
 
 (defn- start-map-view [canvas-id]
-  (let [start-location (new js/L.LatLng 60.168564, 24.941111)
-        tiles (map/create-osm-tiles)]
-    (map/create-map canvas-id tiles start-location)
+  (let [start-location (new js/L.LatLng 60.168564, 24.941111)]
+    (map/open-map canvas-id start-location)
   ))
 
 (defn- show-events [data]
@@ -63,23 +62,22 @@
     :help (help-template)
     (error-template)))
 
-(em/defaction load-navigation-template [page]
+(em/defaction display-navigation-template [page]
   ["#top-navigation"] (em/content (navigation-template page)))
 
 (declare init-navigation)
 (declare start-map-view)
-(declare load-page)
+(declare display-page)
 
-(defn load-navigation [page]
-  (load-navigation-template page)
+(defn display-navigation [page]
+  (display-navigation-template page)
   (init-navigation page))
 
 (em/defaction init-navigation [page]
-  ["a[href='#']"] (em/listen :click #(load-page :index))
-  ["a[href='#map']"] (em/listen :click #(load-page :map))
-  ["a[href='#trackers']"] (em/listen :click #(load-page :trackers))
-  ["a[href='#help']"] (em/listen :click #(load-page :help)))
-
+  ["a[href='#']"] (em/listen :click #(display-page :index))
+  ["a[href='#map']"] (em/listen :click #(display-page :map))
+  ["a[href='#trackers']"] (em/listen :click #(display-page :trackers))
+  ["a[href='#help']"] (em/listen :click #(display-page :help)))
 
 (defmulti init-content identity)
 
@@ -91,14 +89,12 @@
 
 (defn- query-location []
   (let [input ($ :#location-search_input)]
-    (api/search-location (val input) display-location)
-    )
+    (api/search-location (val input) display-location))
   false)
 
 (em/defaction init-location-search []
   [:#location-search] (em/content (location-search-template))
-  [:#location-search_submit] (em/listen :click query-location)
-  )
+  [:#location-search_submit] (em/listen :click query-location))
 
 (defmethod init-content :map []
   (let [start-location (new js/L.LatLng 60.168564, 24.941111)
@@ -106,27 +102,20 @@
     (start-map-view "map-canvas")
     (start-buttons)
     (init-location-search)
-    (map/locate)
   ))
 
 (defmethod init-content :default []
   ;; nothing here
   )
 
-(em/defaction load-content-template [page]
+(em/defaction display-content-template [page]
   ["#content"] (em/content (content-template page)))
 
-(defn load-content [page]
-  (load-content-template page)
-  (init-content page)
-  )
+(defn display-content [page]
+  (display-content-template page)
+  (init-content page))
 
-(defn load-page [page]
-  (load-navigation page)
-  (load-content page))
-
-
-
-
-
-
+(defn display-page [page]
+  (util/log "Displaying page" page)
+  (display-navigation page)
+  (display-content page))

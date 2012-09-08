@@ -9,8 +9,7 @@
   )
 
 (defn- load-internal [active-page]
-  (view/load-navigation active-page)
-  (view/load-content active-page)
+  (view/display-page active-page)
   )
 
 (defn- get-current-page
@@ -25,6 +24,6 @@
 (defn ^:export load-app
   ([] (load-app (get-current-page js/window.location.hash)))
   ([active-page]
-     (util/log "Starting app")
+     (util/log "Starting application with page" active-page)
      (let [active-page (if active-page (keyword active-page) :map)]
        (em/wait-for-load (load-internal active-page)))))
