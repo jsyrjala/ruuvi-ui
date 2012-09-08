@@ -17,6 +17,7 @@ properties are present in `closure-js/externs/leaflet-externs.js`.
 == Center on current location
 - Centers map to client current location.
 - If location ability is not available, ability is hidden.
+- If user denies localization, the button is grayed out (also give tooltip)
 
 - geoLocation API, getLocation
 - disable cache, high accuracy
@@ -54,7 +55,6 @@ properties are present in `closure-js/externs/leaflet-externs.js`.
 -- active navi item as parameter
 - map
 
-
 --------------
 
 = Map implementation
@@ -84,9 +84,11 @@ Background processes
 -- geoLocation.watchPosition -> update-self-location
 - poll new data for trackers
 -- get list of tracker id's, make ajax request for each.
+- locate button should use latest coordinates from wathPosition
 
 ---------------------
 
 Page structure
 - onload reads url and loads corresponding template
 - after loading the elements are bound to actions
+
