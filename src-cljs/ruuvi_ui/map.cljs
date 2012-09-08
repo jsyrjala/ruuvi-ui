@@ -1,6 +1,7 @@
 (ns ruuvi-ui.map
   (:require [ruuvi-ui.util :as util])
   (:use [jayq.core :only [$ replaceWith]]
+        [jayq.util :only [clj->js]]
   ))
 
 (declare locate)
@@ -116,8 +117,25 @@
         deduped-events (map first grouped-events)]
     deduped-events))
 
+(defn- get-event-coordinate [event]
+  (let [lat (get-in event [:location :latitude])
+        lng (get-in event [:location :longitude])]
+    (when (and lat lng)
+      (new js/L.LatLng lat lng)
+    )))
+
+(defn- update-path [existing-path events]
+  (let [coordinates (map get-event-coordinate events)
+        coordinates (filter identity coordinates)]
+    (if existing-path
+      (.setLatLngs existing-path (clj->js coordinates))
+      (let [path (new js/L.Polyline (clj->js coordinates))]
+        (.addTo path @map-view)))
+  ))
+
 (defn- add-tracker-event-data [tracker-id new-events]
   ;; merge new-events with old events and remove dupes
+  ;; TODO separate events to sessions
   (swap! trackers-store
          (fn [trackers]
            (let [trackers (update-in trackers [tracker-id :events]
@@ -128,6 +146,10 @@
                  trackers (update-in trackers [tracker-id :latest-store-time]
                                      (fn [time]
                                        (apply max (conj (map :store_time new-events) time))) )
+                 events (get-in trackers [tracker-id :events])
+                 trackers (update-in trackers [tracker-id :path]
+                                     (fn [existing-path]
+                                       (update-path existing-path events)) )
                  ]
              trackers
              ))
