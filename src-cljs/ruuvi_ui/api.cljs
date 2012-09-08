@@ -1,6 +1,7 @@
 (ns ruuvi-ui.api
   (:require [ruuvi-ui.util :as util])
-  (:use [jayq.util :only [clj->js]])
+  (:use [jayq.util :only [clj->js]]
+        [clojure.walk :only [keywordize-keys]])
   )
 
 (def base-url "http://ruuvi-server.herokuapp.com/api/v1-dev/")
@@ -8,15 +9,11 @@
 (defn- log-request-error [e]
   (util/log (str "AJAX request failed" e)))
 
-;; TODO handles only the first level
-(defn- keyword-keys [m]
-  (into {} (map (fn [[k v]] {(keyword k) v}) m)))
-
 (defn- wrap-success-fn
-  "Convert incoming JSON data to Clojure data structure."
+  "Convert incoming JSON data to Clojure data structure and convert string keys to keywords."
   [func]
   (fn [data text-status jqxhr]
-    (func (js->clj data) text-status jqxhr)))
+    (func (keywordize-keys (js->clj data)) text-status jqxhr)))
   
 (defn- ajax-url-request [url success-fn error-fn]
   (let [request (.getJSON js/jQuery url (wrap-success-fn success-fn))]
@@ -31,12 +28,14 @@
   )
 
 (defn get-trackers [success-fn error-fn]
+  (util/log "Fetching trackers")
   (ajax-url-request (str base-url "trackers") success-fn error-fn))
             
 (defn get-events [tracker-id since-timestamp success-fn error-fn]
+  (util/log (str "Fetching events for tracker" tracker-id " after " since-timestamp ))
   (let [results-since (if since-timestamp (str "storeTimeStart=" since-timestamp) "")]
     (ajax-url-request (str base-url "trackers/" tracker-id "/events?" results-since)
-              success-fn error-fn)))
+                      success-fn error-fn)))
 
 (defn- parse-search-location-response [func]
   (fn [data text-status jqxhr]
@@ -48,7 +47,7 @@
                                          value (merge value
                                                       {:location (new js/L.LatLng lat lon)})]
                                     value
-                                    (keyword-keys value)
+                                    (keywordize-keys value)
                                     )) data))]
       (func parsed-data text-status jqxhr))))
 

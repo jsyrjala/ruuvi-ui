@@ -3,6 +3,7 @@
             [jayq.core :as jquery])
   )
 
+;; TODO support several map
 (def map-view (atom nil))
 
 (def self-location (atom {}))
@@ -64,23 +65,23 @@
 (defn add-tracker-data [trackers-data]
   ;; Update tracker data to trackers-store. Overwrite existing
   ;; trackers.
-  (let [trackers (get trackers-data "trackers")]
+  (let [trackers (:trackers trackers-data)]
     (swap! trackers-store
            (fn [old-list]
              (reduce (fn [sum tracker]
-                       (update-in sum [("id" tracker) :tracker]
+                       (update-in sum [(:id tracker) :tracker]
                                   (fn [_] tracker)))
                      old-list
                      trackers))))
   )
 
 (defn- sort-events [events]
-  (sort-by #(get % "event_time") events))
+  (sort-by :event_time events))
   
 (defn- merge-events [old-events new-events]
   (let [events (concat old-events new-events)
-        sorted-events (sort-by #(get % "id") events)
-        grouped-events (partition-by #(get % "id") sorted-events)
+        sorted-events (sort-by :id events)
+        grouped-events (partition-by :id sorted-events)
         deduped-events (map first grouped-events)]
     deduped-events))
 
@@ -92,10 +93,10 @@
                                      #(sort-events (merge-events % new-events)))             
                  trackers (update-in trackers [tracker-id :latest-event-time]
                                      (fn [time]
-                                       (apply max (conj (map #(get % "event_time") new-events) time))) )
+                                       (apply max (conj (map :event_time new-events) time))) )
                  trackers (update-in trackers [tracker-id :latest-store-time]
                                      (fn [time]
-                                       (apply max (conj (map #(get % "store_time") new-events) time))) )
+                                       (apply max (conj (map :store_time new-events) time))) )
                  ]
              trackers
              ))
@@ -104,8 +105,8 @@
 
 (defn add-event-data [events-data]
   ;; group events by tracker_id
-  (let [events (get events-data "events")
-        grouped (group-by #(get % "tracker_id") events)]
+  (let [events (:events events-data)
+        grouped (group-by :tracker_id events)]
     (doall
      (map #(add-tracker-event-data (key %) (val %)) grouped))
   ))

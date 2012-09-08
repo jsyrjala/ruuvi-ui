@@ -39,15 +39,18 @@
   (util/log "show-events" data)
   )
 
-(defn- f []
+(defn- query-func []
   ;;  (api/get-events 4 nil (fn [data] (show-events (js->clj data))) util/log)
   ;; (api/get-trackers map/add-tracker-data util/log)
-  (api/get-events 4 nil map/add-event-data util/log)
-  )
+  (let [tracker-id "4"
+        trackers (deref map/trackers-store)
+        store-time (get-in trackers [tracker-id :latest-store-time])]
+    (api/get-events tracker-id store-time map/add-event-data util/log)
+  ))
 
 (em/defaction start-buttons []
   ["#locate-me"] (em/listen :click #(map/locate))
-  ["#query"] (em/listen :click f))
+  ["#query"] (em/listen :click query-func))
 
 
 ;;;;;;
