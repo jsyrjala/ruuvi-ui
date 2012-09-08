@@ -9,7 +9,7 @@
   )
 
 (defn- supported-page [page]
-  (or (some #{:index :map :trackers} [page]) :error))
+  (or (some #{:index :map :trackers :help} [page]) :error))
 
 (defn- page-to-selector [page]
   (let [page-selector (str ".page-link-" (name (supported-page page)))]
