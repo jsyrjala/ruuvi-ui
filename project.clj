@@ -42,16 +42,14 @@
                                    :optimizations :whitespace
                                    :pretty-print true
                                    }}
-                       ;; :prod
-                       ;; {:source-path "src-cljs"                        
-                       ;;  :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
-                       ;;             :optimizations :advanced
-                       ;;             ;;:optimizations :simple
-                       ;;             :pretty-print true
-                       ;;             ;; TODO is needed?
-                       ;;             :externs ["externs/jquery.js"]
-                       ;;             :sourcemap true
-                       ;;             }}
+                       :prod
+                       {:source-path "src-cljs"                        
+                        :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
+                                   :optimizations :advanced
+                                   :pretty-print false
+                                   :externs ["externs/jquery.js"]
+                                   :sourcemap true
+                                   }}
                        
               }}
               
