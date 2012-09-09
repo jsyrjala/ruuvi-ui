@@ -3,6 +3,7 @@
   (:use [clojure.string :only [split]]
         [jayq.core :only [$ replaceWith]]
         [jayq.util :only [clj->js]]
+        [ruuvi-ui.log :only [debug info warn error]]
         )
   )
 
@@ -31,7 +32,7 @@
 
 (defn center-map [location & [zoom]]
   (let [zoom (or zoom 13)]
-    (util/log (str "Centering map on " (.-lat location) " " (.-lng location) " with zoom " zoom))
+    (debug (str "Centering map on " (.-lat location) " " (.-lng location) " with zoom " zoom))
     (.setView @map-view location zoom)
     ))
 
@@ -52,12 +53,12 @@
   [new-location]
   (swap! self-location (fn [{:keys [old-location marker] :as old-value}]
                          (let [marker-options {:zIndexOffset 9000}
-                               marker (update-marker marker new-location @map-view options)]
+                               marker (update-marker marker new-location @map-view marker-options)]
                            (merge old-value {:location new-location :marker marker}))
                          )))
 
 (defn- create-map [canvas-id start-location]
-  (util/log "Create new map. Start location:" (.-lat start-location) (.-lng start-location) )
+  (info "Create new map. Start location:" (.-lat start-location) (.-lng start-location) )
   (let [tiles (create-osm-tiles)
         new-map-view (new js/L.Map canvas-id)]
     (.addLayer new-map-view tiles)
@@ -82,7 +83,7 @@
 (defn- redisplay-map
   "Displays existing map in given location in DOM."
   [canvas-id map-view]
-  (util/log "Redisplay existing map.")
+  (info "Redisplay existing map.")
   (let [map-container (.getContainer map-view)
         placeholder ($ (str "#" canvas-id))]
     (.replaceWith placeholder map-container)
@@ -99,7 +100,7 @@
       )))
 
 (defn locate []
-  (util/log "Locating self")
+  (info "Locating self")
   (let [options (js-obj "timeout" 2000
                         "maximumAge" 10000
                         "enableHighAccuracy" true)]

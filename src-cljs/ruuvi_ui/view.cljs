@@ -4,8 +4,9 @@
             [ruuvi-ui.api :as api]
             [ruuvi-ui.map :as map]
             )
-  (:use [jayq.core :only [$ css inner val]])
-  (:require-macros [enfocus.macros :as em]                   )
+  (:use [jayq.core :only [$ css inner val]]
+        [ruuvi-ui.log :only [debug info warn error]])
+  (:require-macros [enfocus.macros :as em])
   )
 
 (defn- supported-page [page]
@@ -13,8 +14,7 @@
 
 (defn- page-to-selector [page]
   (let [page-selector (str ".page-link-" (name (supported-page page)))]
-    page-selector
-    ))
+    page-selector))
 
 (em/deftemplate navigation-template "templates/navigation.html" [active-page]
   [(page-to-selector active-page)] (em/add-class "active"))
@@ -35,16 +35,16 @@
   ))
 
 (defn- show-events [data]
-  (util/log "show-events" data)
+  (info "show-events" data)
   )
 
 (defn- query-func []
-  ;;  (api/get-events 4 nil (fn [data] (show-events (js->clj data))) util/log)
-  ;; (api/get-trackers map/add-tracker-data util/log)
+  ;;  (api/get-events 4 nil (fn [data] (show-events (js->clj data))) error)
+  ;; (api/get-trackers map/add-tracker-data error)
   (let [tracker-id "4"
         trackers (deref map/trackers-store)
         store-time (get-in trackers [tracker-id :latest-store-time])]
-    (api/get-events tracker-id store-time map/add-event-data util/log)
+    (api/get-events tracker-id store-time map/add-event-data error)
   ))
 
 (em/defaction start-buttons []
@@ -116,6 +116,6 @@
   (init-content page))
 
 (defn display-page [page]
-  (util/log "Displaying page" page)
+  (info "Displaying page" page)
   (display-navigation page)
   (display-content page))

@@ -5,6 +5,7 @@
             [ruuvi-ui.util :as util]
             [ruuvi-ui.view :as view]
             )
+  (:use [ruuvi-ui.log :only [debug info warn error]])
   (:require-macros [enfocus.macros :as em])
   )
 
@@ -24,6 +25,6 @@
 (defn ^:export load-app
   ([] (load-app (get-current-page js/window.location.hash)))
   ([active-page]
-     (util/log "Starting application with page" active-page)
+     (info "Starting application with page" active-page)
      (let [active-page (if active-page (keyword active-page) :map)]
        (em/wait-for-load (load-internal active-page)))))

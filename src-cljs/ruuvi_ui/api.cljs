@@ -1,13 +1,14 @@
 (ns ruuvi-ui.api
   (:require [ruuvi-ui.util :as util])
   (:use [jayq.util :only [clj->js]]
-        [clojure.walk :only [keywordize-keys]])
+        [clojure.walk :only [keywordize-keys]]
+        [ruuvi-ui.log :only [debug info warn error]])
   )
 
 (def base-url "http://ruuvi-server.herokuapp.com/api/v1-dev/")
 
 (defn- log-request-error [e]
-  (util/log (str "AJAX request failed" e)))
+  (error (str "AJAX request failed" e)))
 
 (defn- wrap-success-fn
   "Convert incoming JSON data to Clojure data structure and convert string keys to keywords."
@@ -28,11 +29,11 @@
   )
 
 (defn get-trackers [success-fn error-fn]
-  (util/log "Fetching trackers")
+  (debug "Fetching trackers")
   (ajax-url-request (str base-url "trackers") success-fn error-fn))
             
 (defn get-events [tracker-id since-timestamp success-fn error-fn]
-  (util/log (str "Fetching events for tracker" tracker-id " after " since-timestamp ))
+  (debug (str "Fetching events for tracker" tracker-id " after " since-timestamp ))
   (let [results-since (if since-timestamp (str "storeTimeStart=" since-timestamp) "")]
     (ajax-url-request (str base-url "trackers/" tracker-id "/events?" results-since)
                       success-fn error-fn)))
@@ -54,7 +55,7 @@
 (defn search-location
   [address success-fn & [error-fn]]
   (when (and address (not (empty? address)))
-    (util/log "Locating address:" address)
+    (info "Locating address:" address)
     (let [url "http://nominatim.openstreetmap.org/search"]
       (ajax-param-request url {:q address :format :json} (parse-search-location-response success-fn) error-fn))))
     
