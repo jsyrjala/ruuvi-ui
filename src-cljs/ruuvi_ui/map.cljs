@@ -16,8 +16,8 @@
 ;; {tracker-id1 {:tracker <tracker-object>
 ;;               :latest-event-time timestamp
 ;;               :latest-store-time timestamp
+;;               :marker <marker-object>
 ;;               session-id1 {:events [event1 event2]
-;;                            :marker <marker-object>
 ;;                            :path <path-object>}
 ;; }
 (def trackers-store (atom {}))
@@ -37,23 +37,22 @@
 
 (defn- update-marker
   "Updates existing marker or creates a new one."
-  [marker new-location map]
-  (let [marker (or marker (let [new-marker (new js/L.Marker new-location)]
-                            (.addTo new-marker map)
-                            new-marker))]                     
-    (.setLatLng marker new-location)
-    (.update marker)
+  [marker new-location map & [options]]
+  (if new-location
+    (let [marker (or marker (let [new-marker (new js/L.Marker new-location (clj->js options))]
+                              (.addTo new-marker map)
+                              new-marker))]                     
+      (.setLatLng marker new-location)
+      (.update marker)
+      marker)
     marker))
 
 (defn- update-self-location
   "Updates location of self marker."
   [new-location]
   (swap! self-location (fn [{:keys [old-location marker] :as old-value}]
-                         (let [marker (or marker (let [m (new js/L.Marker new-location)]
-                                                   (.addTo m @map-view)
-                                                   m))]                     
-                           (.setLatLng marker new-location)
-                           (.update marker)
+                         (let [marker-options {:zIndexOffset 9000}
+                               marker (update-marker marker new-location @map-view options)]
                            (merge old-value {:location new-location :marker marker}))
                          )))
 
@@ -119,24 +118,38 @@
                      trackers))))
   )
 
+;; TODO this is slow, avoid!
 (defn- sort-events [events]
   (sort-by :event_time events))
 
 (defn- merge-events [old-events new-events]
+  ;; OPTIMIZE assume that both event list are in order
+  ;; concat if new-events is later than old events
+  ;; (handle equal events on overlap)
+  ;; otherwise do below merge/dedupe/sort
   (let [events (concat old-events new-events)
         sorted-events (sort-by :id events)
         grouped-events (partition-by :id sorted-events)
         deduped-events (map first grouped-events)]
     deduped-events))
 
-(defn- get-event-coordinate [event]
+(defn- get-event-coordinate
+  "Returns [latitude longitude]."
+  [event]
   (let [lat (get-in event [:location :latitude])
         lng (get-in event [:location :longitude])]
+    (when (and lat lng)
+      [lat lng] )))
+
+(defn- get-event-lat-lng
+  "Returns L.LatLng object if coordinates exist."
+  [event]
+  (let [[lat lng] (get-event-coordinate event)]
     (when (and lat lng)
       (new js/L.LatLng lat lng))))
 
 (defn- update-path [existing-path events]
-  (let [coordinates (map get-event-coordinate events)
+  (let [coordinates (map get-event-lat-lng events)
         coordinates (filter identity coordinates)]
     (if existing-path
       (let []
@@ -150,18 +163,31 @@
       (let [path (new js/L.Polyline (clj->js coordinates))]
         (.addTo path @map-view))) ))
 
+(defn- get-first-location [events]
+  (get-event-lat-lng (last (filter get-event-coordinate events)))
+  )
+
 (defn- add-tracker-event-data [tracker-id session-id new-events]
   ;; merge new-events with old events and remove dupes
   (swap! trackers-store
          (fn [trackers]
-           (let [trackers (update-in trackers [tracker-id session-id :events]
+           (let [;; update events per tracker and session basis
+                 trackers (update-in trackers [tracker-id session-id :events]
                                      #(sort-events (merge-events % new-events)))
-                 ;; update location per tracker and session basis
+
+                 ;; update paths per tracker and session basis
                  events (get-in trackers [tracker-id session-id :events])
                  trackers (update-in trackers [tracker-id session-id :path]
                                      (fn [existing-path]
                                        (update-path existing-path events)) )
-                 
+
+                 ;; update current location marker per tracker
+                 trackers (update-in trackers [tracker-id :marker]
+                                     (fn [existing-marker]
+                                       (update-marker existing-marker
+                                                      (get-first-location events)
+                                                      @map-view {})))
+                                        
                  ;; update latest event timestamps per tracker basic
                  trackers (update-in trackers [tracker-id :latest-event-time]
                                      (fn [time]
