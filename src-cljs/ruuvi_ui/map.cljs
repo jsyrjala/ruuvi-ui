@@ -1,8 +1,10 @@
 (ns ruuvi-ui.map
   (:require [ruuvi-ui.util :as util])
-  (:use [jayq.core :only [$ replaceWith]]
+  (:use [clojure.string :only [split]]
+        [jayq.core :only [$ replaceWith]]
         [jayq.util :only [clj->js]]
-  ))
+        )
+  )
 
 (declare locate)
 
@@ -12,17 +14,18 @@
 (def self-location (atom {}))
 
 ;; {tracker-id1 {:tracker <tracker-object>
-;;               :latest-event-time
-;;               :latest-store-time
-;;               :events [event1 event2]
-;;               :marker <marker-object>
-;;               :path <path-object>}}
+;;               :latest-event-time timestamp
+;;               :latest-store-time timestamp
+;;               session-id1 {:events [event1 event2]
+;;                            :marker <marker-object>
+;;                            :path <path-object>}
+;; }
 (def trackers-store (atom {}))
-  
+
 (defn create-osm-tiles []
   (let [tile-url "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         tile-opts (js-obj "attribution" "Map data &copy; <a href='http://openstreetmap.org'>OpenStreetMap</a> contributors, <a href='http://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>"
-                   "maxZoom" 18)
+                          "maxZoom" 18)
         tiles (new js/L.TileLayer tile-url tile-opts)]
     tiles))
 
@@ -30,7 +33,17 @@
   (let [zoom (or zoom 13)]
     (util/log (str "Centering map on " (.-lat location) " " (.-lng location) " with zoom " zoom))
     (.setView @map-view location zoom)
-  ))
+    ))
+
+(defn- update-marker
+  "Updates existing marker or creates a new one."
+  [marker new-location map]
+  (let [marker (or marker (let [new-marker (new js/L.Marker new-location)]
+                            (.addTo new-marker map)
+                            new-marker))]                     
+    (.setLatLng marker new-location)
+    (.update marker)
+    marker))
 
 (defn- update-self-location
   "Updates location of self marker."
@@ -75,7 +88,7 @@
         placeholder ($ (str "#" canvas-id))]
     (.replaceWith placeholder map-container)
     (reattach-controls map-view)
-  ))
+    ))
 
 (defn open-map
   "Opens map at given canvas-id. If map doesn't exist it is created and centered on users current location or given start-location. If map already exists, its center point is not changed."
@@ -84,15 +97,14 @@
     (if existing-map-view
       (redisplay-map canvas-id existing-map-view)
       (create-map canvas-id start-location)
-  )))
+      )))
 
 (defn locate []
   (util/log "Locating self")
   (let [options (js-obj "timeout" 2000
                         "maximumAge" 10000
                         "enableHighAccuracy" true)]
-    (.locate @map-view options)
-    ))
+    (.locate @map-view options)))
 
 (defn add-tracker-data [trackers-data]
   ;; Update tracker data to trackers-store. Overwrite existing
@@ -109,7 +121,7 @@
 
 (defn- sort-events [events]
   (sort-by :event_time events))
-  
+
 (defn- merge-events [old-events new-events]
   (let [events (concat old-events new-events)
         sorted-events (sort-by :id events)
@@ -121,45 +133,67 @@
   (let [lat (get-in event [:location :latitude])
         lng (get-in event [:location :longitude])]
     (when (and lat lng)
-      (new js/L.LatLng lat lng)
-    )))
+      (new js/L.LatLng lat lng))))
 
 (defn- update-path [existing-path events]
   (let [coordinates (map get-event-coordinate events)
         coordinates (filter identity coordinates)]
     (if existing-path
-      (.setLatLngs existing-path (clj->js coordinates))
+      (let []
+        ;; TODO optimize (recreating whole path is slow?)
+        ;; if event_time for earliest new event is later or equal that
+        ;; latest. 
+        ;; old event => add to path, otherwise recreate whole path
+        ;; Note that those events may also be identicals ->
+        ;; must compare non identical events here.
+        (.setLatLngs existing-path (clj->js coordinates)))
       (let [path (new js/L.Polyline (clj->js coordinates))]
-        (.addTo path @map-view)))
-  ))
+        (.addTo path @map-view))) ))
 
-(defn- add-tracker-event-data [tracker-id new-events]
+(defn- add-tracker-event-data [tracker-id session-id new-events]
   ;; merge new-events with old events and remove dupes
-  ;; TODO separate events to sessions
   (swap! trackers-store
          (fn [trackers]
-           (let [trackers (update-in trackers [tracker-id :events]
-                                     #(sort-events (merge-events % new-events)))             
+           (let [trackers (update-in trackers [tracker-id session-id :events]
+                                     #(sort-events (merge-events % new-events)))
+                 ;; update location per tracker and session basis
+                 events (get-in trackers [tracker-id session-id :events])
+                 trackers (update-in trackers [tracker-id session-id :path]
+                                     (fn [existing-path]
+                                       (update-path existing-path events)) )
+                 
+                 ;; update latest event timestamps per tracker basic
                  trackers (update-in trackers [tracker-id :latest-event-time]
                                      (fn [time]
                                        (apply max (conj (map :event_time new-events) time))) )
                  trackers (update-in trackers [tracker-id :latest-store-time]
                                      (fn [time]
                                        (apply max (conj (map :store_time new-events) time))) )
-                 events (get-in trackers [tracker-id :events])
-                 trackers (update-in trackers [tracker-id :path]
-                                     (fn [existing-path]
-                                       (update-path existing-path events)) )
                  ]
              trackers
              ))
          )
   )
 
+(defn- tracker-session-grouping [event]
+  (let [tracker-id (:tracker_id event)
+        session-id (:event_session_id event)]
+    ;; TODO group-by doesn't work if [tracker-id event-id] is returned. it
+    ;; returns undefined
+    (str tracker-id "/" session-id)))
+
+(defn- tracker-session-degrouping [grouping]
+  (let [parts (split grouping "/")
+        tracker-id (parts 0)
+        session-id (parts 1)]
+    [(or tracker-id nil) (or session-id nil)] ))
+
 (defn add-event-data [events-data]
-  ;; group events by tracker_id
+  ;; group events by tracker_id and event_session_id
   (let [events (:events events-data)
-        grouped (group-by :tracker_id events)]
+        grouped (group-by tracker-session-grouping events)]
     (doall
-     (map #(add-tracker-event-data (key %) (val %)) grouped))
-  ))
+     (map (fn [g]
+            (let [[tracker-id session-id] (tracker-session-degrouping (key g))]
+              (add-tracker-event-data tracker-id session-id (val g)))) grouped)) ))
+
