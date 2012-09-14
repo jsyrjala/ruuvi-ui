@@ -17,7 +17,7 @@
   [hash]
   (if (or (empty? hash) (= "#" hash))
     :index
-    (let [parts (re-seq #"#([a-z]+).*" hash)]
+    (let [parts (re-seq #"#([-_a-z]+).*" hash)]
       (if parts
         (last (first parts))
         :error))))

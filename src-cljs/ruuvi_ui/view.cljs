@@ -10,11 +10,13 @@
   )
 
 (defn- supported-page [page]
-  (or (some #{:index :map :trackers :help} [page]) :error))
+  (or (some #{:index :map :trackers :create-tracker :help} [page]) :error))
 
 (defn- page-to-selector [page]
-  (let [page-selector (str ".page-link-" (name (supported-page page)))]
-    page-selector))
+  (case page
+    :create-tracker ".page-link-trackers"
+    (let [page-selector (str ".page-link-" (name (supported-page page)))]
+      page-selector)))
 
 (em/deftemplate navigation-template "templates/navigation.html" [active-page]
   [(page-to-selector active-page)] (em/add-class "active"))
@@ -23,6 +25,7 @@
 (em/deftemplate map-template "templates/map-page.html" [])
 (em/deftemplate trackers-template "templates/trackers-page.html" [])
 (em/deftemplate help-template "templates/help-page.html" [])
+(em/deftemplate create-tracker-template "templates/create-tracker-page.html" [])
 (em/deftemplate error-template "templates/error-page.html" [])
 
 (em/deftemplate location-search-template "templates/location-search.html" [])
@@ -59,8 +62,11 @@
     :index (index-template)
     :map (map-template)
     :trackers (trackers-template)
+    :create-tracker (create-tracker-template)
     :help (help-template)
-    (error-template)))
+    (do
+      (warn (str "Page " page " not found"))
+      (error-template))))
 
 (em/defaction display-navigation-template [page]
   ["#top-navigation"] (em/content (navigation-template page)))
@@ -104,6 +110,14 @@
     (init-location-search)
   ))
 
+
+(em/defaction init-create-tracker []
+  ["a[href='#create-tracker']"] (em/listen :click #(display-page :create-tracker))
+  )
+(defmethod init-content :trackers []
+  (init-create-tracker)
+  )
+
 (defmethod init-content :default []
   ;; nothing here
   )
@@ -117,5 +131,6 @@
 
 (defn display-page [page]
   (info "Displaying page" page)
+  (display-content page)
   (display-navigation page)
-  (display-content page))
+  )
