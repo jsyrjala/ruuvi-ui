@@ -1,11 +1,14 @@
 (ns ruuvi-ui.api
-  (:require [ruuvi-ui.util :as util])
+  (:require [ruuvi-ui.util :as util]
+            )
   (:use [jayq.util :only [clj->js]]
+        [jayq.core :only [$ css inner val ajax]]
         [clojure.walk :only [keywordize-keys]]
         [ruuvi-ui.log :only [debug info warn error]])
   )
 
-(def base-url "http://ruuvi-server.herokuapp.com/api/v1-dev/")
+;;(def base-url "http://ruuvi-server.herokuapp.com/api/v1-dev/")
+(def base-url "http://localhost:3000/api/v1-dev/")
 
 (defn- log-request-error [e]
   (error (str "AJAX request failed" e)))
@@ -25,8 +28,14 @@
   (let [request (.getJSON js/jQuery url (clj->js params)
                           (wrap-success-fn success-fn))]
 
-    (.error request (or error-fn log-request-error)))
+    (.fail request (or error-fn log-request-error)))
   )
+
+(defn- ajax-post-request [url params success-fn error-fn]
+  (let [request (.ajax js/jQuery url (clj->js params))]
+    (.done request wrap-success-fn success-fn)
+    (.done request (or error-fn log-request-error))
+  ))
 
 (defn get-trackers [success-fn error-fn]
   (debug "Fetching trackers")
@@ -58,4 +67,21 @@
     (info "Locating address:" address)
     (let [url "http://nominatim.openstreetmap.org/search"]
       (ajax-param-request url {:q address :format :json} (parse-search-location-response success-fn) error-fn))))
-    
+
+(defn create-tracker [{:keys [name code shared-secret demo-password success-fn error-fn]}]
+  (info "Creating a new tracker")
+  (let [message {:tracker {:name name
+                           :code code
+                           :shared_secret code
+                           }
+                 }
+        settings {:type "POST"
+                  :data (js/JSON.stringify (clj->js message))
+                  :processData false
+                  :contentType "application/json"
+                  :success success-fn
+                  :error error-fn
+                  }
+        url (str base-url "trackers")]
+    (ajax-post-request url settings success-fn error-fn)
+  ))

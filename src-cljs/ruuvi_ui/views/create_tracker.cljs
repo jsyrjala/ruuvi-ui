@@ -4,17 +4,24 @@
             [ruuvi-ui.view :as view]
             )
   (:require-macros [enfocus.macros :as em])
-  (:use [ruuvi-ui.log :only [debug info warn error]])
+  (:use [ruuvi-ui.log :only [debug info warn error]
+         jayq.core :only [$]])
   )
 
 (em/deftemplate create-tracker-template "templates/create-tracker-page.html" [])
 
 (defn- create-tracker [event]
-  (info "Creating a new tracker")
-  ;; returning false will not work here
+  (let [name (.val (js/$ "#tracker-name"))
+        code (.val (js/$ "#tracker-code"))
+        shared-secret (.val (js/$ "#tracker-secret"))
+        demo-password (.val (js/$ "#access-password"))]
+    (api/create-tracker {:name name
+                         :code code
+                         :shared-secret shared-secret
+                         })
   (.preventDefault event)
   (.stopPropagation event)
-  )
+  ))
 
 (em/defaction init-components []
   [:#create-tracker-button] (em/listen :click create-tracker))
