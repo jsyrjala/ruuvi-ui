@@ -39,17 +39,19 @@
                        {:source-path "src-cljs"
                         :jar true
                         :compiler {:output-to "resources/public/js/ruuvi-tracker-ui-debug.js"
-                                   :optimizations :whitespace
                                    :pretty-print true
+                                   :externs ["externs/jquery.js"]
                                    }}
+
                        :prod
                        {:source-path "src-cljs"                        
                         :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
                                    :optimizations :advanced
-                                   :pretty-print false
+                                   :pretty-print true
                                    :externs ["externs/jquery.js"]
                                    :sourcemap true
                                    }}
+                       
                        
               }}
               
