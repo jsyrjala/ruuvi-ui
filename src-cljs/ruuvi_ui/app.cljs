@@ -1,17 +1,14 @@
 (ns ruuvi-ui.app
   (:require [enfocus.core :as ef]
             [ruuvi-ui.map :as map]
-            [ruuvi-ui.api :as api]
-            [ruuvi-ui.util :as util]
-            [ruuvi-ui.view :as view]
+            [ruuvi-ui.pages :as pages]
             )
   (:use [ruuvi-ui.log :only [debug info warn error]])
   (:require-macros [enfocus.macros :as em])
   )
 
 (defn- load-internal [active-page]
-  (view/display-page active-page)
-  )
+  (pages/display-page active-page))
 
 (defn- get-current-page
   [hash]
