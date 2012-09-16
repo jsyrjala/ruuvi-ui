@@ -9,8 +9,11 @@
 
 (em/deftemplate create-tracker-template "templates/create-tracker-page.html" [])
 
-(defn- create-tracker []
+(defn- create-tracker [event]
   (info "Creating a new tracker")
+  ;; returning false will not work here
+  (.preventDefault event)
+  (.stopPropagation event)
   )
 
 (em/defaction init-components []
