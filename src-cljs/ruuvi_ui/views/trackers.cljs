@@ -10,12 +10,22 @@
   (:require-macros [enfocus.macros :as em])
   )
 
-(em/deftemplate trackers-template "templates/trackers-page.html" [])
+(em/defsnippet tracker-list "templates/components.html" ["#tracker-list > tbody > *"]
+  [tracker]
+  [".tracker-name"] (em/content (:name tracker))
+  [".tracker-code"] (em/content (:tracker_code tracker))
+  )
+
+(em/deftemplate trackers-template "templates/trackers-page.html" [trackers]
+  ["#tracker-list"] (em/content (map #(tracker-list %) trackers)))
+
 
 (defmethod view/init-content :trackers []
 
   )
 
 (defmethod view/content-template :trackers []
-  (trackers-template))
+  (let [trackers [{:name "Tracker 1" :tracker_code "abc"}
+                  {:name "Tracker 2" :tracker_code "foob"}]]
+    (trackers-template trackers)))
 
