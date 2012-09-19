@@ -8,7 +8,8 @@
   )
 
 ;;(def base-url "http://ruuvi-server.herokuapp.com/api/v1-dev/")
-(def base-url "http://localhost:3000/api/v1-dev/")
+;;(def base-url "http://localhost:3000/api/v1-dev/")
+(def base-url "http://198.61.201.6:8000/api/v1-dev/")
 
 (defn- log-request-error [e]
   (error (str "AJAX request failed" e)))
@@ -27,14 +28,13 @@
 (defn- ajax-param-request [url params success-fn error-fn]
   (let [request (.getJSON js/jQuery url (clj->js params)
                           (wrap-success-fn success-fn))]
-
     (.fail request (or error-fn log-request-error)))
   )
 
 (defn- ajax-post-request [url params success-fn error-fn]
   (let [request (.ajax js/jQuery url (clj->js params))]
     (.done request wrap-success-fn success-fn)
-    (.done request (or error-fn log-request-error))
+    (.fail request (or error-fn log-request-error))
   ))
 
 (defn get-trackers [success-fn error-fn]
