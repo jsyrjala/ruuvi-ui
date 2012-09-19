@@ -6,7 +6,7 @@
             ]
   :dependencies [[org.clojure/clojure "1.4.0"]
                  ;; ClojureScript
-                 [enfocus "1.0.0-alpha2"]
+                 [enfocus "1.0.0-alpha3"]
 
                  ;; JavaScript
                  [jayq "0.1.0-alpha3"]
@@ -37,20 +37,20 @@
                        
                        :dev
                        {:source-path "src-cljs"
-                        :jar true
+                        ;;:jar true
                         :compiler {:output-to "resources/public/js/ruuvi-tracker-ui-debug.js"
                                    :pretty-print true
                                    :externs ["externs/jquery.js"]
                                    }}
 
-                       :prod
-                       {:source-path "src-cljs"                        
-                        :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
-                                   :optimizations :advanced
-                                   :pretty-print true
-                                   :externs ["externs/jquery.js"]
-                                   :sourcemap true
-                                   }}
+                       ;; :prod
+                       ;; {:source-path "src-cljs"                        
+                       ;;  :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
+                       ;;             :optimizations :advanced
+                       ;;             :pretty-print true
+                       ;;             :externs ["externs/jquery.js"]
+                       ;;             :sourcemap true
+                       ;;             }}
                        
                        
               }}
