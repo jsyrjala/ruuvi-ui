@@ -41,14 +41,16 @@
       (map/center-map (:location loc))
   )))
 
-(defn- query-location []
+(defn- query-location [event]
+  (.preventDefault event)
+  (.stopPropagation event)
   (let [input ($ :#location-search_input)]
     (api/search-location (val input) display-location))
-  false)
+  )
 
 (em/defaction init-location-search []
   [:#location-search] (em/content (location-search-template))
-  [:#location-search_submit] (em/listen :click query-location))
+  [:#location-search_form] (em/listen :submit query-location))
 
 (defmethod view/init-content :map []
   (let [start-location (new js/L.LatLng 60.168564, 24.941111)
