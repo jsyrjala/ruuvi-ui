@@ -11,7 +11,7 @@
   )
 
 (defn- supported-page [page]
-  (or (some #{:index :map :trackers :create-tracker :help} [page]) :error))
+  (or (some #{:index :map :trackers :create-tracker :help :debug} [page]) :error))
 
 (defn- page-to-selector [page]
   (case page
@@ -40,7 +40,8 @@
   ["a[href='#index']"] (em/listen :click #(display-page :index))
   ["a[href='#map']"] (em/listen :click #(display-page :map))
   ["a[href='#trackers']"] (em/listen :click #(display-page :trackers))
-  ["a[href='#help']"] (em/listen :click #(display-page :help))
   ["a[href='#create-tracker']"] (em/listen :click #(display-page :create-tracker))
+  ["a[href='#help']"] (em/listen :click #(display-page :help))
+  ["a[href='#debug']"] (em/listen :click #(display-page :debug))
   )
 

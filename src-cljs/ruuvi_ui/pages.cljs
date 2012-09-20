@@ -6,13 +6,14 @@
             [ruuvi-ui.views.map :as map]
             [ruuvi-ui.views.trackers :as trackers]
             [ruuvi-ui.views.create-tracker :as create-tracker]
+            [ruuvi-ui.views.debug :as debug]
             )
   (:use [ruuvi-ui.log :only [debug info warn error]])
   (:require-macros [enfocus.macros :as em])
   )
 
 (defn- supported-page [page]
-  (or (some #{:index :map :trackers :create-tracker :help} [page]) :error))
+  (or (some #{:index :map :trackers :create-tracker :help :debug} [page]) :error))
 
 (defn- page-to-selector [page]
   (case page
