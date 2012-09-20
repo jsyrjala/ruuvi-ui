@@ -9,7 +9,7 @@
                  [enfocus "1.0.0-alpha3"]
 
                  ;; JavaScript
-                 [jayq "0.1.0-alpha3"]
+                 [jayq "0.1.0-alpha4"]
 
                  ;; web server
                  [compojure "1.1.1"]
@@ -43,14 +43,14 @@
                                    :externs ["externs/jquery.js"]
                                    }}
 
-                       ;; :prod
-                       ;; {:source-path "src-cljs"                        
-                       ;;  :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
-                       ;;             :optimizations :advanced
-                       ;;             :pretty-print true
-                       ;;             :externs ["externs/jquery.js"]
-                       ;;             :sourcemap true
-                       ;;             }}
+                       :prod
+                       {:source-path "src-cljs"                        
+                        :compiler {:output-to "resources/public/js/ruuvi-tracker-ui.js"
+                                   :optimizations :advanced
+                                   :pretty-print true
+                                   :externs ["externs/jquery.js"]
+                                   :sourcemap true
+                                   }}
                        
                        
               }}
