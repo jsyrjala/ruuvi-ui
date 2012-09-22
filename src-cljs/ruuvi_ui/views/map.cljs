@@ -3,6 +3,7 @@
             [ruuvi-ui.api :as api]
             [ruuvi-ui.view :as view]
             [ruuvi-ui.map :as map]
+            [ruuvi-ui.data :as data]
             )
   (:use [jayq.core :only [$ val]]
         [ruuvi-ui.log :only [debug info warn error]])
@@ -17,13 +18,13 @@
   )
 
 (defn- query-func []
-  ;;  (api/get-events 4 nil (fn [data] (show-events (js->clj data))) error)
+  ;; (api/get-events 4 nil (fn [data] (show-events (js->clj data))) error)
   ;; (api/get-trackers map/add-tracker-data error)
   (let [tracker-id "4"
-        trackers (deref map/trackers-store)
+        trackers (:trackers (deref data/state))
         store-time (get-in trackers [tracker-id :latest-store-time])]
     (api/get-events tracker-id store-time map/add-event-data error)
-  ))
+    ))
 
 (em/defaction start-buttons []
   ["#locate-me"] (em/listen :click #(map/locate))
