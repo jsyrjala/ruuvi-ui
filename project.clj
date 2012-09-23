@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  ;; ClojureScript
                  [enfocus "1.0.0-alpha3"]
-
+                 
                  ;; JavaScript
                  [jayq "0.1.0-alpha4"]
 

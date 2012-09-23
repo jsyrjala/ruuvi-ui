@@ -49,14 +49,19 @@
         </div>
     </header>
 
+
     <!-- tracker-page content -->
-  <div id="content">
+    <div id="content">
     <div class="container-fluid">
       <div class="row-fluid">
-        <a href="#create-tracker">Create new tracker</a>
+        <p>
+          Select trackers you want to follow
+          or <a href="#create-tracker">create your own</a>.
+        </p>
         <table id="tracker-list">
           <thead>
             <tr>
+              <th> </th>
               <th>Tracker</th>
               <th>Code</th>
               <th>Activity</th>
@@ -64,10 +69,14 @@
           </thead>
           <tbody>
             <tr>
+              <td><input type="checkbox" class="tracker-selected" /></td>
               <td class="tracker-name">Hunting party</td>
               <td class="tracker-code">3929320021</td>
           </tbody>
         </table>
+        <p>
+          
+        </p>
         <hr />
       </div>
     </div>

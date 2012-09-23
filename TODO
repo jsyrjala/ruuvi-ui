@@ -29,6 +29,7 @@ properties are present in `closure-js/externs/leaflet-externs.js`.
 - Select trackers trackers that are shown in the list
 - Map shows paths for selected trackers.
 - Map shows marker at latest known position.
+- Trackers have different colors.
 - Selected trackers are stored to local storage
 -- ruuvitracker.ui.selected-trackers = [1,2,99] // tracker ids
 
