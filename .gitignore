@@ -10,3 +10,6 @@ pom.xml
 .lein-plugins
 doc
 .lein-*
+*.log
+*.tar.gz
+*.sh
