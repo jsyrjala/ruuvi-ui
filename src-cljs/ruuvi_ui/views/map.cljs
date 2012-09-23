@@ -2,7 +2,7 @@
   (:require [enfocus.core :as ef]
             [ruuvi-ui.api :as api]
             [ruuvi-ui.view :as view]
-            [ruuvi-ui.map :as map]
+            [ruuvi-ui.map-api :as map-api]
             [ruuvi-ui.data :as data]
             )
   (:use [jayq.core :only [$ val]]
@@ -19,27 +19,27 @@
 
 (defn- query-func []
   ;; (api/get-events 4 nil (fn [data] (show-events (js->clj data))) error)
-  ;; (api/get-trackers map/add-tracker-data error)
+  ;; (api/get-trackers map-api/add-tracker-data error)
   (let [tracker-id "4"
         trackers (:trackers (deref data/state))
         store-time (get-in trackers [tracker-id :latest-store-time])]
-    (api/get-events tracker-id store-time map/add-event-data error)
+    (api/get-events tracker-id store-time map-api/add-event-data error)
     ))
 
 (em/defaction start-buttons []
-  ["#locate-me"] (em/listen :click #(map/locate))
+  ["#locate-me"] (em/listen :click #(map-api/locate))
   ["#query"] (em/listen :click query-func))
 
 
 (defn- start-map-view [canvas-id]
   (let [start-location (new js/L.LatLng 60.168564, 24.941111)]
-    (map/open-map canvas-id start-location)
+    (map-api/open-map canvas-id start-location)
   ))
 
 (defn- display-location [locations]
   (when (not (empty? locations))
     (if-let [loc (first locations)]
-      (map/center-map (:location loc))
+      (map-api/center-map (:location loc))
   )))
 
 (defn- query-location [event]
@@ -55,7 +55,7 @@
 
 (defmethod view/init-content :map []
   (let [start-location (new js/L.LatLng 60.168564, 24.941111)
-        tiles (map/create-osm-tiles)]
+        tiles (map-api/create-osm-tiles)]
     (start-map-view "map-canvas")
     (start-buttons)
     (init-location-search)

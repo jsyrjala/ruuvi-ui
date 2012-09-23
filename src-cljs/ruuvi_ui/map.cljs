@@ -1,4 +1,4 @@
-(ns ruuvi-ui.map
+(ns ruuvi-ui.map-api
   (:require [ruuvi-ui.util :as util]
             )
   (:use [ruuvi-ui.data :only [state]]

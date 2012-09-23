@@ -4,7 +4,6 @@
             [ruuvi-ui.api :as api]
             [ruuvi-ui.view :as view]
             [ruuvi-ui.views.navigation :as navi]
-            [ruuvi-ui.map :as map]
             )
   (:use [ruuvi-ui.log :only [debug info warn error]])
   (:require-macros [enfocus.macros :as em])
@@ -38,5 +37,4 @@
                {:key "k2" :value "v2"}
                {:key "k3-" :value "v3"}]]
     (debug-template items)))
-
 

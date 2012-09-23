@@ -3,7 +3,6 @@
             [ruuvi-ui.util :as util]
             [ruuvi-ui.api :as api]
             [ruuvi-ui.view :as view]
-            [ruuvi-ui.map :as map]
             )
   (:use [jayq.core :only [$ css inner val]]
         [ruuvi-ui.log :only [debug info warn error]])

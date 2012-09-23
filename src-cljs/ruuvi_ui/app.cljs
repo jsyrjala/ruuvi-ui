@@ -1,6 +1,5 @@
 (ns ruuvi-ui.app
   (:require [enfocus.core :as ef]
-            [ruuvi-ui.map :as map]
             [ruuvi-ui.pages :as pages]
             )
   (:use [ruuvi-ui.log :only [debug info warn error]])
