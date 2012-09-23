@@ -4,6 +4,7 @@
             [ruuvi-ui.view :as view]
             [ruuvi-ui.map-api :as map-api]
             [ruuvi-ui.data :as data]
+            [ruuvi-ui.storage :as storage]
             )
   (:use [jayq.core :only [$ val]]
         [ruuvi-ui.log :only [debug info warn error]])
@@ -13,23 +14,17 @@
 (em/deftemplate map-template "templates/map-page.html" [])
 (em/deftemplate location-search-template "templates/location-search.html" [])
 
-(defn- show-events [data]
-  (info "show-events" data)
-  )
-
 (defn- query-func []
-  ;; (api/get-events 4 nil (fn [data] (show-events (js->clj data))) error)
-  ;; (api/get-trackers map-api/add-tracker-data error)
-  (let [tracker-id "4"
-        trackers (:trackers (deref data/state))
-        store-time (get-in trackers [tracker-id :latest-store-time])]
-    (api/get-events tracker-id store-time map-api/add-event-data error)
-    ))
+  (let [tracker-ids (storage/fetch :selected-trackers)]
+    (doseq [tracker-id tracker-ids]
+      (let [trackers (:trackers (deref data/state))
+            store-time (get-in trackers [tracker-id :latest-store-time])]
+        (api/get-events tracker-id store-time map-api/add-event-data error)
+    ))))
 
 (em/defaction start-buttons []
   ["#locate-me"] (em/listen :click #(map-api/locate))
   ["#query"] (em/listen :click query-func))
-
 
 (defn- start-map-view [canvas-id]
   (let [start-location (new js/L.LatLng 60.168564, 24.941111)]
