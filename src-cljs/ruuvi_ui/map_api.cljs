@@ -1,5 +1,6 @@
 (ns ruuvi-ui.map-api
   (:require [ruuvi-ui.util :as util]
+            [ruuvi-ui.storage :as storage]
             )
   (:use [ruuvi-ui.data :only [state]]
         [clojure.string :only [split]]
@@ -47,10 +48,41 @@
                              )))
   )
 
+(defn- store-map-location [event]
+  (let [map-view (:map-view @state)
+        location (.getCenter map-view)
+        zoom (.getZoom map-view)
+        data {:zoom zoom
+              :latitude (.-lat location) :longitude (.-lng location)
+              :timestamp (.getTime (new js/Date))}]
+    (storage/store :map-location data)))
+
+(defn- fetch-map-location [timeout-seconds]
+  (let [now (.getTime (new js/Date))
+        value (storage/fetch :map-location)
+        value-timestamp (:timestamp value)]
+    (if (and value-timestamp
+             (> (- now  (* timeout-seconds 1000)) value-timestamp))
+      nil
+      value)))
+
+(defn- set-initial-location
+  "Use stored location if it is newer than 1h, otherwise use current location."
+  [default-location]
+  (let [hour (* 60 60)
+        {:keys [timestamp latitude longitude zoom]} (fetch-map-location hour)]
+    (if latitude
+      (center-map (new js/L.LatLng latitude longitude) zoom)
+      (do
+        (center-map default-location)
+        (locate))
+      )))
+
 (defn- create-map [canvas-id start-location]
   (info "Create new map. Start location:" (.-lat start-location) (.-lng start-location) )
   (let [tiles (create-osm-tiles)
         new-map-view (new js/L.Map canvas-id)]
+
     (.addLayer new-map-view tiles)
     (.on new-map-view "locationfound" (fn [e]
                                         (let [location (.-latlng e)]
@@ -59,8 +91,10 @@
                                           )))
     (.on new-map-view "locationerror" (fn [e] (js/console.log "Location error" e)))
     (swap! state #(assoc % :map-view new-map-view))
-    (center-map start-location)
-    (locate)
+    (set-initial-location start-location)
+    ;; set up move events here so the do not mess up set-initial-location
+    (.on new-map-view "zoomend" store-map-location)
+    (.on new-map-view "moveend" store-map-location)
     new-map-view))
 
 (defn- reattach-controls
@@ -96,7 +130,7 @@
                         "enableHighAccuracy" true)]
     (.locate (@state :map-view) options)))
 
-
+;; TODO move to ruuvi-ui.data
 (defn add-tracker-data [trackers-data]
   ;; Update tracker data to trackers-store. Overwrite existing
   ;; trackers.
@@ -109,10 +143,12 @@
                                        old-list
                                        trackers))))))
 
+;; TODO move to ruuvi-ui.data
 ;; TODO this is slow, avoid!
 (defn- sort-events [events]
   (sort-by :event_time events))
 
+;; TODO move to ruuvi-ui.data
 (defn- merge-events [old-events new-events]
   ;; OPTIMIZE assume that both event list are in order
   ;; concat if new-events is later than old events
@@ -158,6 +194,7 @@
   (get-event-lat-lng (last (filter get-event-coordinate events)))
   )
 
+;; TODO move to ruuvi-ui.data
 (defn- update-events-to-trackers [trackers tracker-id session-id new-events]
   (let [;; update events per tracker and session basis
         trackers (update-in trackers [tracker-id session-id :events]
@@ -187,6 +224,7 @@
     trackers
     ))
 
+;; TODO move to ruuvi-ui.data
 (defn- add-tracker-event-data [tracker-id session-id new-events]
   ;; merge new-events with old events and remove dupes
   (swap! state (fn [old-state]
@@ -194,6 +232,7 @@
                             #(update-events-to-trackers % tracker-id session-id new-events)
                             ))))
 
+;; TODO move to ruuvi-ui.data
 (defn- tracker-session-grouping [event]
   (let [tracker-id (:tracker_id event)
         session-id (:event_session_id event)]
@@ -201,12 +240,14 @@
     ;; returns undefined
     (str tracker-id "/" session-id)))
 
+;; TODO move to ruuvi-ui.data
 (defn- tracker-session-degrouping [grouping]
   (let [parts (split grouping "/")
         tracker-id (parts 0)
         session-id (parts 1)]
     [(or tracker-id nil) (or session-id nil)] ))
 
+;; TODO move to ruuvi-ui.data
 (defn add-event-data [events-data]
   ;; group events by tracker_id and event_session_id
   (let [events (:events events-data)
