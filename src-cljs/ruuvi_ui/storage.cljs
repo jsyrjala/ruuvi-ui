@@ -10,11 +10,11 @@
 
 ;; TODO locking
 
-(defn- storage-key [key]
-  (to-string (str "ruuvitracker/" (name key))))
-
 (defn- to-string [data]
   (js/JSON.stringify (clj->js data)))
+
+(defn- storage-key [key]
+  (to-string (str "ruuvitracker/" (name key))))
 
 (defn- to-clj [data]
   (keywordize-keys (js->clj (js/JSON.parse data))))
