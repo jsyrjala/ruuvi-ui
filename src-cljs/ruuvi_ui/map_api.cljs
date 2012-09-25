@@ -10,7 +10,7 @@
         )
   )
 
-(declare locate)
+(declare start-locating)
 
 (defn create-osm-tiles []
   (let [tile-url "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -40,6 +40,7 @@
 (defn- update-self-location
   "Updates location of self marker."
   [new-location]
+  (info "Set self location to" new-location)
   (swap! state #(update-in % [:self-location]
                            (fn [{:keys [old-location marker] :as old-value}]
                              (let [marker-options {:zIndexOffset 9000}
@@ -73,9 +74,7 @@
         {:keys [timestamp latitude longitude zoom]} (fetch-map-location hour)]
     (if latitude
       (center-map (new js/L.LatLng latitude longitude) zoom)
-      (do
-        (center-map default-location)
-        (locate))
+      (center-map default-location)
       )))
 
 (defn- create-map [canvas-id start-location]
@@ -86,7 +85,6 @@
     (.addLayer new-map-view tiles)
     (.on new-map-view "locationfound" (fn [e]
                                         (let [location (.-latlng e)]
-                                          (center-map location 18)
                                           (update-self-location location)
                                           )))
     (.on new-map-view "locationerror" (fn [e] (js/console.log "Location error" e)))
@@ -95,8 +93,10 @@
     ;; set up move events here so the do not mess up set-initial-location
     (.on new-map-view "zoomend" store-map-location)
     (.on new-map-view "moveend" store-map-location)
+    (start-locating)
     new-map-view))
 
+;; TODO check if actually needed (zoom buttons broke before)
 (defn- reattach-controls
   "Remove and add controls back to map. Some controls break when redisplaying map."
   [map-view]
@@ -124,11 +124,20 @@
       )))
 
 (defn locate []
-  (info "Locating self")
-  (let [options (js-obj "timeout" 2000
-                        "maximumAge" 10000
-                        "enableHighAccuracy" true)]
-    (.locate (@state :map-view) options)))
+  (debug "Locating self")
+  (when-let [self-location (:location (:self-location @state))]
+    (center-map self-location 18)))
+
+(defn start-locating []
+  (debug "Starting continuous locating")
+  (let [options {:timeout 10000
+                 :maximumAge 10000
+                 :enableHighAccuracy true
+                 :watch true}]
+    (.locate (@state :map-view) (clj->js options))))
+
+(defn stop-locating []
+  (.stopLocate (@state :map-view)))
 
 ;; TODO move to ruuvi-ui.data
 (defn add-tracker-data [trackers-data]
