@@ -1,10 +1,10 @@
 # ruuvi-ui
 
-A Clojure library designed to ... well, that part is up to you.
+A ClojureScript based UI for RuuviTracker API. 
 
 ## Usage
 
-FIXME
+TODO
 
 ## License
 
