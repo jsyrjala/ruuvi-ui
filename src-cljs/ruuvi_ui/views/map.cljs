@@ -19,7 +19,7 @@
     (doseq [tracker-id tracker-ids]
       (let [trackers (:trackers (deref data/state))
             store-time (get-in trackers [tracker-id :latest-store-time])]
-        (api/get-events tracker-id store-time map-api/add-event-data error)
+        (api/get-events tracker-id store-time data/add-event-data error)
     ))))
 
 (em/defaction start-buttons []
