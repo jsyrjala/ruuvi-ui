@@ -1,7 +1,7 @@
 (defproject ruuvi-ui "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
-  :plugins [[lein-cljsbuild "0.2.7"]
+  :plugins [[lein-cljsbuild "0.2.8"]
             [lein-midje "2.0.0-SNAPSHOT"]
             ]
   :dependencies [[org.clojure/clojure "1.4.0"]
