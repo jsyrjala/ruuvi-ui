@@ -1,22 +1,22 @@
 (defproject ruuvi-ui "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :plugins [[lein-cljsbuild "0.2.8"]
-            [lein-midje "2.0.0-SNAPSHOT"]
+  :description "RuuviTracker UI"
+  :url "http://www.ruuvitracker.fi/"
+  :plugins [[lein-cljsbuild "0.2.9"]
+            [lein-midje "2.0.1"]
             ]
   :dependencies [[org.clojure/clojure "1.4.0"]
                  ;; ClojureScript
-                 [enfocus "1.0.0-alpha3"]
+                 [enfocus "1.0.0-beta1"]
                  
                  ;; JavaScript
-                 [jayq "0.1.0-alpha4"]
-
+                 [jayq "0.3.0"]
+                 
                  ;; web server
-                 [compojure "1.1.1"]
-                 [ring/ring-core "1.1.1"]
-                 [ring/ring-servlet "1.1.1"]
-                 [ring/ring-jetty-adapter "1.1.1"]
-                 [ring/ring-devel "1.1.1"]
+                 [compojure "1.1.3"]
+                 [ring/ring-core "1.1.6"]
+                 [ring/ring-servlet "1.1.6"]
+                 [ring/ring-jetty-adapter "1.1.6"]
+                 [ring/ring-devel "1.1.6"]
                  [amalloy/ring-gzip-middleware "0.1.2"]
                  
                  ;; logging
